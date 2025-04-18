@@ -1,5 +1,6 @@
 
-import { WeeklyStudyPlan } from "@/types/studyPlan";
+import { v4 as uuidv4 } from "uuid";
+import { WeeklyStudyPlan, StudySubject, DailyStudyTime, StudySession } from "@/types/studyPlan";
 
 const PLAN_STORAGE_KEY = "studysmart_weekly_plan";
 
@@ -54,7 +55,7 @@ export const generateStudyPlan = (subjects: StudySubject[], dailyTimes: DailyStu
       }
       
       sessions.push({
-        id: `${timeSlot.day}-${subject.id}-${topic.id}`,
+        id: uuidv4(),
         day: timeSlot.day,
         subject: subject.name,
         topic: topic.name,
@@ -66,4 +67,22 @@ export const generateStudyPlan = (subjects: StudySubject[], dailyTimes: DailyStu
   });
   
   return sessions;
+};
+
+export const deleteWeeklyPlan = (): void => {
+  localStorage.removeItem(PLAN_STORAGE_KEY);
+};
+
+export const markSessionComplete = (sessionId: string): boolean => {
+  const plan = getWeeklyPlan();
+  if (!plan || !plan.sessions) return false;
+  
+  const updatedSessions = plan.sessions.map(session => 
+    session.id === sessionId ? { ...session, completed: true } : session
+  );
+  
+  plan.sessions = updatedSessions;
+  saveWeeklyPlan(plan);
+  
+  return true;
 };

@@ -3,20 +3,30 @@ import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Clock, Calendar, CheckCircle } from "lucide-react";
+import { BookOpen, Clock, CheckCircle, Calendar, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { StudySession, WeeklyStudyPlan } from "@/types/studyPlan";
 import { getWeeklyPlan, saveWeeklyPlan } from "@/utils/studyPlanStorage";
+import { checkAndResetWeeklyProgress } from "@/utils/studyPlanHelper";
 
 const WeeklyPlanView = () => {
   const [studySessions, setStudySessions] = useState<StudySession[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
+    // Check if week has changed and reset progress if needed
+    const wasReset = checkAndResetWeeklyProgress();
+    if (wasReset) {
+      toast.info("A new week has started! Your progress has been reset.");
+    }
+    
+    // Load study sessions
     const plan = getWeeklyPlan();
     if (plan && plan.sessions) {
       setStudySessions(plan.sessions);
     }
+    setIsLoading(false);
   }, []);
   
   const markAsComplete = (id: string) => {
@@ -36,83 +46,101 @@ const WeeklyPlanView = () => {
     toast.success("Session marked as complete!");
   };
 
-  const viewDetails = (id: string) => {
-    const session = studySessions.find(s => s.id === id);
-    if (session) {
-      toast.info(`Viewing details for ${session.subject}: ${session.topic}`);
-    }
+  // Order sessions by day of week
+  const orderByDay = (sessions: StudySession[]): StudySession[] => {
+    const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    return [...sessions].sort((a, b) => {
+      return dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day);
+    });
   };
 
-  if (studySessions.length === 0) {
+  if (isLoading) {
     return (
-      <div className="text-center py-8">
-        <h3 className="text-lg mb-2">No study sessions planned yet</h3>
-        <p className="text-muted-foreground">Create your weekly study plan to get started</p>
+      <div className="flex justify-center py-8">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
+  if (studySessions.length === 0) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="text-center py-8 space-y-4"
+      >
+        <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground" />
+        <h3 className="text-lg font-medium">No study sessions planned yet</h3>
+        <p className="text-muted-foreground">Create your weekly study plan to get started</p>
+      </motion.div>
+    );
+  }
+
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto rounded-md border border-white/10">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead>Day</TableHead>
-            <TableHead>Subject</TableHead>
-            <TableHead>Topic</TableHead>
-            <TableHead>Time</TableHead>
-            <TableHead>Duration</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+          <TableRow className="bg-muted/50">
+            <TableHead className="font-medium">Day</TableHead>
+            <TableHead className="font-medium">Subject</TableHead>
+            <TableHead className="font-medium">Topic</TableHead>
+            <TableHead className="font-medium">Time</TableHead>
+            <TableHead className="font-medium">Status</TableHead>
+            <TableHead className="text-right font-medium">Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {studySessions.map((session) => (
-            <motion.tr
-              key={session.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="border-b border-white/10"
-            >
-              <TableCell>{session.day}</TableCell>
-              <TableCell className="font-medium">{session.subject}</TableCell>
-              <TableCell>{session.topic}</TableCell>
-              <TableCell>{session.time}</TableCell>
-              <TableCell>{session.duration}</TableCell>
-              <TableCell>
-                {session.completed ? (
-                  <Badge variant="outline" className="bg-primary/20 text-primary">
-                    <CheckCircle className="mr-1 h-3 w-3" /> Completed
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-secondary/20 text-secondary">
-                    <Clock className="mr-1 h-3 w-3" /> Scheduled
-                  </Badge>
-                )}
-              </TableCell>
-              <TableCell className="text-right">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => viewDetails(session.id)}
-                  className="mr-2 h-8"
-                >
-                  Details
-                </Button>
-                {!session.completed && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => markAsComplete(session.id)}
-                    className="h-8"
-                  >
-                    Mark Complete
-                  </Button>
-                )}
-              </TableCell>
-            </motion.tr>
-          ))}
+          <AnimatePresence>
+            {orderByDay(studySessions).map((session) => (
+              <motion.tr
+                key={session.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="border-b border-white/10"
+              >
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>{session.day}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="font-medium">{session.subject}</TableCell>
+                <TableCell>{session.topic}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span>{session.time}</span>
+                    <span className="text-xs text-muted-foreground">({session.duration})</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {session.completed ? (
+                    <Badge variant="outline" className="bg-primary/20 text-primary">
+                      <CheckCircle className="mr-1 h-3 w-3" /> Completed
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-secondary/20 text-secondary">
+                      <Clock className="mr-1 h-3 w-3" /> Scheduled
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell className="text-right">
+                  {!session.completed && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => markAsComplete(session.id)}
+                      className="h-8 hover:bg-primary/20 hover:text-primary"
+                    >
+                      <CheckCircle className="mr-1 h-4 w-4" />
+                      Mark Complete
+                    </Button>
+                  )}
+                </TableCell>
+              </motion.tr>
+            ))}
+          </AnimatePresence>
         </TableBody>
       </Table>
     </div>
