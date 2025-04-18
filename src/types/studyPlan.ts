@@ -25,6 +25,7 @@ export interface StudySession {
   time: string;
   duration: string;
   completed: boolean;
+  reminded?: boolean;
 }
 
 export interface WeeklyStudyPlan {
@@ -32,4 +33,10 @@ export interface WeeklyStudyPlan {
   dailyTimes: DailyStudyTime[];
   sessions: StudySession[];
   lastGenerated: string;
+}
+
+export interface StreakData {
+  currentStreak: number;
+  longestStreak: number;
+  lastUpdated: string;
 }

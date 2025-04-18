@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import WeeklyPlanView from "@/components/WeeklyPlanView";
 import { StudyTimeline } from "@/components/timeline/StudyTimeline";
 import { getWeeklyPlan } from "@/utils/studyPlanStorage";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 
 interface StudyPlanCardProps {
@@ -15,13 +15,14 @@ interface StudyPlanCardProps {
 
 export const StudyPlanCard = ({ onEditPlan }: StudyPlanCardProps) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: plan, isLoading } = useQuery({
     queryKey: ['weeklyPlan', user?.id],
     queryFn: getWeeklyPlan,
     enabled: !!user,
     refetchOnWindowFocus: true,
-    refetchInterval: 60000 // Refresh every minute
+    staleTime: 1000 * 60, // 1 minute
   });
   
   if (isLoading) {

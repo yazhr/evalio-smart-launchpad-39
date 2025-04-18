@@ -1,44 +1,33 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Clock, CheckCircle, Calendar, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { StudySession, WeeklyStudyPlan } from "@/types/studyPlan";
-import { getWeeklyPlan, markSessionComplete } from "@/utils/studyPlanStorage";
-import { checkAndResetWeeklyProgress } from "@/utils/studyPlanHelper";
-import { useQuery } from "@tanstack/react-query";
+import { StudySession } from "@/types/studyPlan";
+import { markSessionComplete } from "@/utils/studyPlanStorage";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getWeeklyPlan } from "@/utils/studyPlanStorage";
 import { useAuth } from "@/hooks/useAuth";
 
 const WeeklyPlanView = () => {
-  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   
-  const { data: plan, isLoading: isPlanLoading } = useQuery({
+  const { data: plan, isLoading } = useQuery({
     queryKey: ['weeklyPlan', user?.id],
     queryFn: getWeeklyPlan,
     enabled: !!user,
     refetchOnWindowFocus: true,
-    refetchInterval: 60000 // Refresh every minute
   });
-  
-  useEffect(() => {
-    // Check if week has changed and reset progress if needed
-    const checkWeekProgress = async () => {
-      const wasReset = await checkAndResetWeeklyProgress();
-      if (wasReset) {
-        toast.info("A new week has started! Your progress has been reset.");
-      }
-    };
-    
-    checkWeekProgress();
-  }, []);
   
   const handleMarkAsComplete = async (id: string) => {
     const success = await markSessionComplete(id);
     if (success) {
+      // Invalidate the query to trigger a refresh
+      queryClient.invalidateQueries({ queryKey: ['weeklyPlan'] });
       toast.success("Session marked as complete!");
     } else {
       toast.error("Failed to mark session as complete. Please try again.");
@@ -53,7 +42,7 @@ const WeeklyPlanView = () => {
     });
   };
 
-  if (isPlanLoading || isLoading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center py-8">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
