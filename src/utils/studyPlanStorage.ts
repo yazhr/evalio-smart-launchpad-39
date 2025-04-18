@@ -1,7 +1,7 @@
-
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/integrations/supabase/client";
 import { WeeklyStudyPlan, StudySubject, DailyStudyTime, StudySession } from "@/types/studyPlan";
+import { Json } from "@/integrations/supabase/types";
 
 // Helper function to get the current user ID
 const getCurrentUserId = async () => {
@@ -84,9 +84,11 @@ export const getWeeklyPlan = async (): Promise<WeeklyStudyPlan | null> => {
     return null;
   }
 
+  // Use proper type assertions with unknown as an intermediary step
+  // This properly handles the conversion from the Json type to our specific types
   return {
-    subjects: planData.subjects as StudySubject[],
-    dailyTimes: planData.daily_times as DailyStudyTime[],
+    subjects: (planData.subjects as unknown) as StudySubject[],
+    dailyTimes: (planData.daily_times as unknown) as DailyStudyTime[],
     sessions: sessionsData || [],
     lastGenerated: planData.last_generated
   };
