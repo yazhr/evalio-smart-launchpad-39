@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { X, Plus, BookOpen, Clock, Calendar, ChevronRight, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import { saveWeeklyPlan, generateStudyPlan, getWeeklyPlan } from "@/utils/studyPlanStorage";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Separator } from "@/components/ui/separator";
 
 interface StudyPlanFormProps {
