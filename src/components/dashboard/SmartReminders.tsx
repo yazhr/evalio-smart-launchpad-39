@@ -43,8 +43,8 @@ export const SmartReminders = () => {
     // Clear existing reminders
     const existingTimers = localStorage.getItem("studysmart_reminder_timers");
     if (existingTimers) {
-      const timers = JSON.parse(existingTimers);
-      timers.forEach((timer: number) => clearTimeout(timer));
+      const timers = JSON.parse(existingTimers) as number[];
+      timers.forEach((timer) => clearTimeout(timer));
     }
     
     const newTimers: number[] = [];
@@ -75,7 +75,7 @@ export const SmartReminders = () => {
       const timeUntilReminder = reminderTime.getTime() - new Date().getTime();
       
       if (timeUntilReminder > 0) {
-        const timerId = setTimeout(() => {
+        const timerId = window.setTimeout(() => {
           if (Notification.permission === "granted") {
             new Notification("Study Reminder", {
               body: `Your ${session.subject} study session on ${session.topic} is in 30 minutes`,
@@ -207,3 +207,4 @@ export const SmartReminders = () => {
     </motion.div>
   );
 };
+
