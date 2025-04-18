@@ -1,79 +1,56 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Clock, Calendar, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-
-// Example study data - in a real app, this would come from your backend
-const studySessionsData = [
-  {
-    id: 1,
-    day: "Monday",
-    subject: "Mathematics",
-    topic: "Linear Algebra",
-    duration: "1 hour",
-    completed: true,
-    time: "9:00 AM"
-  },
-  {
-    id: 2,
-    day: "Tuesday",
-    subject: "Physics",
-    topic: "Quantum Mechanics",
-    duration: "2 hours",
-    completed: false,
-    time: "2:00 PM"
-  },
-  {
-    id: 3,
-    day: "Wednesday",
-    subject: "Computer Science",
-    topic: "Data Structures",
-    duration: "1.5 hours",
-    completed: false,
-    time: "10:30 AM"
-  },
-  {
-    id: 4,
-    day: "Thursday",
-    subject: "Biology",
-    topic: "Cell Biology",
-    duration: "1 hour",
-    completed: false,
-    time: "3:00 PM"
-  },
-  {
-    id: 5,
-    day: "Friday",
-    subject: "Chemistry",
-    topic: "Organic Chemistry",
-    duration: "1.5 hours",
-    completed: false,
-    time: "11:00 AM"
-  }
-];
+import { StudySession, WeeklyStudyPlan } from "@/types/studyPlan";
+import { getWeeklyPlan, saveWeeklyPlan } from "@/utils/studyPlanStorage";
 
 const WeeklyPlanView = () => {
-  const [studySessions, setStudySessions] = useState(studySessionsData);
+  const [studySessions, setStudySessions] = useState<StudySession[]>([]);
   
-  const markAsComplete = (id: number) => {
-    setStudySessions(sessions =>
-      sessions.map(session =>
-        session.id === id ? { ...session, completed: true } : session
-      )
+  useEffect(() => {
+    const plan = getWeeklyPlan();
+    if (plan && plan.sessions) {
+      setStudySessions(plan.sessions);
+    }
+  }, []);
+  
+  const markAsComplete = (id: string) => {
+    const updatedSessions = studySessions.map(session =>
+      session.id === id ? { ...session, completed: true } : session
     );
+    
+    setStudySessions(updatedSessions);
+    
+    // Update storage
+    const plan = getWeeklyPlan();
+    if (plan) {
+      plan.sessions = updatedSessions;
+      saveWeeklyPlan(plan);
+    }
+    
     toast.success("Session marked as complete!");
   };
 
-  const viewDetails = (id: number) => {
+  const viewDetails = (id: string) => {
     const session = studySessions.find(s => s.id === id);
     if (session) {
       toast.info(`Viewing details for ${session.subject}: ${session.topic}`);
     }
   };
+
+  if (studySessions.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <h3 className="text-lg mb-2">No study sessions planned yet</h3>
+        <p className="text-muted-foreground">Create your weekly study plan to get started</p>
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-x-auto">
