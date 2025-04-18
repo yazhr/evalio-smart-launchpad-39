@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,15 +13,32 @@ const LoginForm: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("login");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const { signIn, signUp, user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    
+    // Password validation - at least 6 characters
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    
     setIsLoading(true);
-
-    const form = e.target as HTMLFormElement;
-    const email = (form.querySelector("#" + (activeTab === "login" ? "email" : "signup-email")) as HTMLInputElement).value;
-    const password = (form.querySelector("#" + (activeTab === "login" ? "password" : "signup-password")) as HTMLInputElement).value;
     
     try {
       if (activeTab === "login") {
@@ -29,12 +47,21 @@ const LoginForm: React.FC = () => {
         toast.success("Successfully logged in!");
       } else {
         await signUp(email, password);
-        toast.success("Successfully signed up! You can now log in.");
+        toast.success("Account created! You can now log in.");
         setActiveTab("login");
       }
     } catch (error: any) {
       console.error("Auth error:", error);
-      toast.error(error.message || "An error occurred");
+      
+      // Handle specific error messages
+      if (error.message.includes("Invalid login credentials")) {
+        toast.error("Invalid email or password. Please try again.");
+      } else if (error.message.includes("User already registered")) {
+        toast.error("Email already registered. Please log in instead.");
+        setActiveTab("login");
+      } else {
+        toast.error(error.message || "An error occurred during authentication");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -76,6 +103,8 @@ const LoginForm: React.FC = () => {
                 <Input 
                   id="email" 
                   type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com" 
                   required 
                   className="bg-white/5 border-white/10 h-12 text-base input-glow focus-visible:ring-evalio-purple focus-visible:ring-opacity-30 focus-visible:border-evalio-purple transition-all duration-300"
@@ -92,6 +121,8 @@ const LoginForm: React.FC = () => {
                 <Input 
                   id="password" 
                   type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••" 
                   required 
                   className="bg-white/5 border-white/10 h-12 text-base input-glow focus-visible:ring-evalio-purple focus-visible:ring-opacity-30 focus-visible:border-evalio-purple transition-all duration-300"
@@ -124,6 +155,8 @@ const LoginForm: React.FC = () => {
                 <Input 
                   id="signup-email" 
                   type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com" 
                   required 
                   className="bg-white/5 border-white/10 h-12 text-base input-glow focus-visible:ring-evalio-purple focus-visible:ring-opacity-30 focus-visible:border-evalio-purple transition-all duration-300"
@@ -135,10 +168,13 @@ const LoginForm: React.FC = () => {
                 <Input 
                   id="signup-password" 
                   type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••" 
                   required 
                   className="bg-white/5 border-white/10 h-12 text-base input-glow focus-visible:ring-evalio-purple focus-visible:ring-opacity-30 focus-visible:border-evalio-purple transition-all duration-300"
                 />
+                <p className="text-xs text-foreground/60 mt-1">Password must be at least 6 characters long</p>
               </div>
               
               <Button 
