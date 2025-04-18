@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { StudySubject, DailyStudyTime, WeeklyStudyPlan } from "@/types/studyPlan";
@@ -164,29 +163,37 @@ const StudyPlanForm: React.FC<StudyPlanFormProps> = ({ onComplete }) => {
   };
   
   return (
-    <Card className="glass-card w-full max-w-4xl mx-auto border-none">
-      <CardHeader className="bg-gradient-to-r from-primary/30 to-secondary/30 rounded-t-xl">
-        <CardTitle className="text-center text-3xl">
-          Create Your Weekly Study Plan
+    <Card className="w-full max-w-4xl mx-auto border-none shadow-lg bg-background/95 backdrop-blur-xl">
+      <CardHeader className="space-y-2 bg-gradient-to-r from-background/80 to-muted/50 rounded-t-xl border-b border-border/20">
+        <CardTitle className="text-2xl font-semibold tracking-tight">
+          Study Plan Configuration
         </CardTitle>
-        <CardDescription className="text-center text-base">
-          Tell us what you want to study, and we'll organize a personalized weekly schedule for you
+        <CardDescription className="text-base text-muted-foreground">
+          Design your personalized study schedule with detailed subjects and timing
         </CardDescription>
       </CardHeader>
       
       <CardContent className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="subjects" className="text-center py-3 data-[state=active]:bg-primary/20">
-              <BookOpen className="mr-2 h-4 w-4" /> Subjects & Topics
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger 
+              value="subjects" 
+              className="flex items-center gap-2 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all"
+            >
+              <BookOpen className="h-4 w-4" />
+              Subjects & Topics
             </TabsTrigger>
-            <TabsTrigger value="schedule" className="text-center py-3 data-[state=active]:bg-primary/20">
-              <Calendar className="mr-2 h-4 w-4" /> Weekly Schedule
+            <TabsTrigger 
+              value="schedule" 
+              className="flex items-center gap-2 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all"
+            >
+              <Calendar className="h-4 w-4" />
+              Weekly Schedule
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="subjects" className="space-y-6">
-            <div className="space-y-6">
+            <div className="space-y-4">
               <AnimatePresence>
                 {subjects.map((subject, index) => (
                   <motion.div
@@ -194,18 +201,18 @@ const StudyPlanForm: React.FC<StudyPlanFormProps> = ({ onComplete }) => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="space-y-4 p-4 border border-white/10 rounded-lg bg-white/5"
+                    transition={{ duration: 0.2 }}
+                    className="p-4 rounded-lg border border-border/50 bg-muted/30 backdrop-blur-sm"
                   >
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary font-medium">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-sm font-medium">
                         {index + 1}
                       </div>
                       <Input
                         value={subject.name}
                         onChange={(e) => updateSubject(subject.id, e.target.value)}
-                        placeholder="Subject name (e.g. Mathematics)"
-                        className="flex-1"
+                        placeholder="Enter subject name"
+                        className="flex-1 border-border/50 bg-background/50"
                       />
                       {subjects.length > 1 && (
                         <Button
@@ -213,28 +220,28 @@ const StudyPlanForm: React.FC<StudyPlanFormProps> = ({ onComplete }) => {
                           variant="ghost"
                           size="icon"
                           onClick={() => removeSubject(subject.id)}
-                          className="text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+                          className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                         >
                           <X className="h-4 w-4" />
                         </Button>
                       )}
                     </div>
                     
-                    <div className="pl-4 space-y-3">
-                      <div className="flex items-center">
-                        <h4 className="text-sm font-medium">Topics</h4>
+                    <div className="mt-4 pl-9 space-y-3">
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <h4 className="font-medium">Topics</h4>
                         <Separator className="flex-1 mx-4" />
                       </div>
                       
                       <AnimatePresence>
                         {subject.topics.map((topic, topicIndex) => (
                           <motion.div 
-                            key={topic.id} 
-                            className="flex items-center gap-2"
+                            key={topic.id}
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.2 }}
+                            className="flex items-center gap-2"
                           >
                             <div className="flex items-center justify-center w-5 h-5 rounded-full bg-secondary/20 text-secondary text-xs font-medium">
                               {topicIndex + 1}
@@ -242,15 +249,15 @@ const StudyPlanForm: React.FC<StudyPlanFormProps> = ({ onComplete }) => {
                             <Input
                               value={topic.name}
                               onChange={(e) => updateTopic(subject.id, topic.id, e.target.value)}
-                              placeholder={`Topic for ${subject.name} (e.g. Algebra)`}
-                              className="flex-1"
+                              placeholder="Enter topic name"
+                              className="flex-1 h-8 text-sm border-border/50 bg-background/50"
                             />
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon"
                               onClick={() => removeTopic(subject.id, topic.id)}
-                              className="h-8 w-8"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                             >
                               <X className="h-3 w-3" />
                             </Button>
@@ -263,9 +270,9 @@ const StudyPlanForm: React.FC<StudyPlanFormProps> = ({ onComplete }) => {
                         variant="outline"
                         size="sm"
                         onClick={() => addTopic(subject.id)}
-                        className="mt-2"
+                        className="text-xs"
                       >
-                        <Plus className="h-4 w-4 mr-2" /> Add Topic
+                        <Plus className="h-3 w-3 mr-1" /> Add Topic
                       </Button>
                     </div>
                   </motion.div>
@@ -276,25 +283,25 @@ const StudyPlanForm: React.FC<StudyPlanFormProps> = ({ onComplete }) => {
                 type="button"
                 variant="outline"
                 onClick={addSubject}
-                className="w-full"
+                className="w-full border-dashed"
               >
                 <Plus className="h-4 w-4 mr-2" /> Add Subject
               </Button>
             </div>
           </TabsContent>
           
-          <TabsContent value="schedule" className="space-y-6">
-            <div className="grid gap-4">
+          <TabsContent value="schedule" className="space-y-4">
+            <div className="grid gap-3">
               <AnimatePresence>
                 {dailyTimes.map((timeSlot, index) => (
                   <motion.div
                     key={timeSlot.day}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 border border-white/10 rounded-lg bg-white/5"
+                    transition={{ duration: 0.2, delay: index * 0.05 }}
+                    className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-lg border border-border/50 bg-muted/30"
                   >
-                    <div className="flex items-center gap-2 min-w-[120px]">
+                    <div className="flex items-center gap-3 min-w-[140px]">
                       <Switch
                         checked={timeSlot.enabled}
                         onCheckedChange={(checked) => updateDailyTime(index, 'enabled', checked)}
@@ -303,7 +310,7 @@ const StudyPlanForm: React.FC<StudyPlanFormProps> = ({ onComplete }) => {
                     </div>
                     
                     <div className="flex items-center gap-4 flex-1">
-                      <div className="flex flex-col gap-1 flex-1">
+                      <div className="flex flex-col gap-1.5 flex-1">
                         <span className="text-xs text-muted-foreground">Start Time</span>
                         <Input
                           type="time"
@@ -314,7 +321,7 @@ const StudyPlanForm: React.FC<StudyPlanFormProps> = ({ onComplete }) => {
                         />
                       </div>
                       
-                      <div className="flex flex-col gap-1 flex-1">
+                      <div className="flex flex-col gap-1.5 flex-1">
                         <span className="text-xs text-muted-foreground">End Time</span>
                         <Input
                           type="time"
@@ -333,22 +340,25 @@ const StudyPlanForm: React.FC<StudyPlanFormProps> = ({ onComplete }) => {
         </Tabs>
       </CardContent>
       
-      <CardFooter className="flex justify-between p-6 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-b-xl">
+      <CardFooter className="flex justify-between p-6 bg-gradient-to-b from-transparent to-muted/20 rounded-b-xl border-t border-border/20">
         {activeTab === "schedule" ? (
           <Button variant="outline" onClick={() => setActiveTab("subjects")} className="gap-2">
-            <ChevronLeft className="h-4 w-4" /> Back
+            <ChevronLeft className="h-4 w-4" /> Back to Subjects
           </Button>
         ) : (
           <div></div>
         )}
-        <Button onClick={handleNext} className="gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-all btn-glow">
+        <Button 
+          onClick={handleNext} 
+          className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+        >
           {activeTab === "subjects" ? (
             <>
-              Next <ChevronRight className="h-4 w-4" />
+              Continue to Schedule <ChevronRight className="h-4 w-4" />
             </>
           ) : (
             <>
-              Create Plan <Calendar className="h-4 w-4 ml-1" />
+              Create Study Plan <Calendar className="h-4 w-4" />
             </>
           )}
         </Button>
