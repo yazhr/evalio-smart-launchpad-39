@@ -9,16 +9,22 @@ import { AIChatCard } from "@/components/dashboard/AIChatCard";
 import { ProgressCard } from "@/components/dashboard/ProgressCard";
 import { StudyPlanCard } from "@/components/dashboard/StudyPlanCard";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const Dashboard = () => {
   const [showPlanForm, setShowPlanForm] = useState(false);
   const [progressValue, setProgressValue] = useState(0);
+  const { user } = useAuth();
   
   useEffect(() => {
-    if (!hasExistingPlan()) {
-      setShowPlanForm(true);
-    }
-  }, []);
+    const checkExistingPlan = async () => {
+      if (user && !(await hasExistingPlan())) {
+        setShowPlanForm(true);
+      }
+    };
+    
+    checkExistingPlan();
+  }, [user]);
   
   useEffect(() => {
     const updateProgress = () => {

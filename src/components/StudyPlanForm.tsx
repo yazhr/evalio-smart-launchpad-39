@@ -8,16 +8,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { X, Plus, BookOpen, Clock, Calendar, ChevronRight, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
-import { saveWeeklyPlan, generateStudyPlan, getWeeklyPlan } from "@/utils/studyPlanStorage";
+import { saveWeeklyPlan, generateStudyPlan } from "@/utils/studyPlanStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/hooks/useAuth";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface StudyPlanFormProps {
   onComplete: () => void;
 }
 
 const StudyPlanForm: React.FC<StudyPlanFormProps> = ({ onComplete }) => {
-  const existingPlan = getWeeklyPlan();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const existingPlan = null;
   
   const [activeTab, setActiveTab] = useState("subjects");
   const [subjects, setSubjects] = useState<StudySubject[]>(
@@ -102,7 +107,12 @@ const StudyPlanForm: React.FC<StudyPlanFormProps> = ({ onComplete }) => {
     setDailyTimes(newDailyTimes);
   };
   
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (!user) {
+      toast.error("You must be logged in to create a study plan");
+      return;
+    }
+
     if (activeTab === "subjects") {
       // Validate subjects and topics
       const validSubjects = subjects.filter(subject => subject.name.trim() !== "");
@@ -129,7 +139,6 @@ const StudyPlanForm: React.FC<StudyPlanFormProps> = ({ onComplete }) => {
         return;
       }
       
-      // Create and save the study plan
       const filteredSubjects = subjects.filter(s => s.name.trim() !== "");
       filteredSubjects.forEach(subject => {
         subject.topics = subject.topics.filter(t => t.name.trim() !== "");
@@ -144,12 +153,15 @@ const StudyPlanForm: React.FC<StudyPlanFormProps> = ({ onComplete }) => {
         lastGenerated: new Date().toISOString(),
       };
       
-      // Set the current week number for progress tracking
-      const currentWeek = getCurrentWeekNumber();
-      localStorage.setItem('studysmart_current_week', currentWeek.toString());
-      
-      saveWeeklyPlan(weeklyPlan);
-      onComplete();
+      try {
+        await saveWeeklyPlan(weeklyPlan);
+        queryClient.invalidateQueries({ queryKey: ['weeklyPlan'] });
+        onComplete();
+        toast.success("Study plan created successfully!");
+      } catch (error) {
+        console.error("Error saving study plan:", error);
+        toast.error("Failed to save study plan. Please try again.");
+      }
     }
   };
   

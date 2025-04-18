@@ -6,21 +6,32 @@ import { motion } from "framer-motion";
 import WeeklyPlanView from "@/components/WeeklyPlanView";
 import { StudyTimeline } from "@/components/timeline/StudyTimeline";
 import { getWeeklyPlan } from "@/utils/studyPlanStorage";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 
 interface StudyPlanCardProps {
   onEditPlan: () => void;
 }
 
 export const StudyPlanCard = ({ onEditPlan }: StudyPlanCardProps) => {
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  const { data: plan } = useQuery({
-    queryKey: ['weeklyPlan'],
+  const { data: plan, isLoading } = useQuery({
+    queryKey: ['weeklyPlan', user?.id],
     queryFn: getWeeklyPlan,
-    refetchOnWindowFocus: true
+    enabled: !!user,
+    refetchOnWindowFocus: true,
+    refetchInterval: 60000 // Refresh every minute
   });
   
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -38,11 +49,7 @@ export const StudyPlanCard = ({ onEditPlan }: StudyPlanCardProps) => {
           </div>
           <Button 
             variant="outline" 
-            onClick={() => {
-              onEditPlan();
-              // Invalidate the query after plan edit dialog is opened
-              queryClient.invalidateQueries({ queryKey: ['weeklyPlan'] });
-            }}
+            onClick={onEditPlan}
             className="border-primary/30 hover:bg-primary/10"
           >
             Edit Plan

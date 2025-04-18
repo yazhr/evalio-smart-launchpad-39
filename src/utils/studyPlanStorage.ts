@@ -1,88 +1,138 @@
 
 import { v4 as uuidv4 } from "uuid";
+import { supabase } from "@/integrations/supabase/client";
 import { WeeklyStudyPlan, StudySubject, DailyStudyTime, StudySession } from "@/types/studyPlan";
+import { useAuth } from "@/hooks/useAuth";
 
-const PLAN_STORAGE_KEY = "studysmart_weekly_plan";
+export const saveWeeklyPlan = async (plan: WeeklyStudyPlan): Promise<WeeklyStudyPlan | null> => {
+  const { user } = useAuth();
+  if (!user) return null;
 
-export const saveWeeklyPlan = (plan: WeeklyStudyPlan): void => {
-  localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(plan));
-};
+  const { data, error } = await supabase
+    .from('study_plans')
+    .upsert({
+      user_id: user.id,
+      subjects: plan.subjects,
+      daily_times: plan.dailyTimes,
+      last_generated: new Date().toISOString()
+    })
+    .select()
+    .single();
 
-export const getWeeklyPlan = (): WeeklyStudyPlan | null => {
-  const planJson = localStorage.getItem(PLAN_STORAGE_KEY);
-  if (!planJson) return null;
-  
-  try {
-    return JSON.parse(planJson) as WeeklyStudyPlan;
-  } catch (e) {
-    console.error("Error parsing weekly plan:", e);
+  if (error) {
+    console.error('Error saving weekly plan:', error);
     return null;
   }
+
+  // Save sessions separately
+  if (plan.sessions && plan.sessions.length > 0) {
+    const sessionsToSave = plan.sessions.map(session => ({
+      ...session,
+      user_id: user.id,
+      plan_id: data.id
+    }));
+
+    const { error: sessionError } = await supabase
+      .from('study_sessions')
+      .upsert(sessionsToSave);
+
+    if (sessionError) {
+      console.error('Error saving study sessions:', sessionError);
+    }
+  }
+
+  return plan;
 };
 
-export const hasExistingPlan = (): boolean => {
-  return localStorage.getItem(PLAN_STORAGE_KEY) !== null;
+export const getWeeklyPlan = async (): Promise<WeeklyStudyPlan | null> => {
+  const { user } = useAuth();
+  if (!user) return null;
+
+  const { data: planData, error: planError } = await supabase
+    .from('study_plans')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('last_generated', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (planError) {
+    console.error('Error fetching weekly plan:', planError);
+    return null;
+  }
+
+  if (!planData) return null;
+
+  const { data: sessionsData, error: sessionsError } = await supabase
+    .from('study_sessions')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('plan_id', planData.id);
+
+  if (sessionsError) {
+    console.error('Error fetching study sessions:', sessionsError);
+    return null;
+  }
+
+  return {
+    subjects: planData.subjects,
+    dailyTimes: planData.daily_times,
+    sessions: sessionsData || [],
+    lastGenerated: planData.last_generated
+  };
 };
 
-export const generateStudyPlan = (subjects: StudySubject[], dailyTimes: DailyStudyTime[]): StudySession[] => {
-  // Days of the week
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  const sessions: StudySession[] = [];
-  
-  // For each enabled day
-  dailyTimes.filter(t => t.enabled).forEach(timeSlot => {
-    // Find matching day
-    const dayIndex = days.findIndex(d => d === timeSlot.day);
-    if (dayIndex === -1) return;
-    
-    // For simplicity, assign one subject per day in rotation
-    subjects.forEach((subject, subjectIndex) => {
-      if (subject.topics.length === 0) return;
-      
-      // Use modulo to distribute topics
-      const topicIndex = (dayIndex + subjectIndex) % subject.topics.length;
-      const topic = subject.topics[topicIndex];
-      
-      // Calculate study duration (default to 1 hour if times not properly set)
-      let duration = "1 hour";
-      try {
-        const start = new Date(`2000-01-01T${timeSlot.startTime}`);
-        const end = new Date(`2000-01-01T${timeSlot.endTime}`);
-        const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-        duration = `${Math.max(0.5, Math.round(diffHours * 2) / 2)} hours`;
-      } catch (e) {
-        console.error("Error calculating duration:", e);
-      }
-      
-      sessions.push({
-        id: uuidv4(),
-        day: timeSlot.day,
-        subject: subject.name,
-        topic: topic.name,
-        time: timeSlot.startTime,
-        duration,
-        completed: false
-      });
-    });
-  });
-  
-  return sessions;
+export const hasExistingPlan = async (): Promise<boolean> => {
+  const { user } = useAuth();
+  if (!user) return false;
+
+  const { data, error } = await supabase
+    .from('study_plans')
+    .select('id')
+    .eq('user_id', user.id)
+    .limit(1)
+    .single();
+
+  return !!data && !error;
 };
 
-export const deleteWeeklyPlan = (): void => {
-  localStorage.removeItem(PLAN_STORAGE_KEY);
+export const deleteWeeklyPlan = async (): Promise<boolean> => {
+  const { user } = useAuth();
+  if (!user) return false;
+
+  const { data: planData, error: planFetchError } = await supabase
+    .from('study_plans')
+    .select('id')
+    .eq('user_id', user.id)
+    .limit(1)
+    .single();
+
+  if (planFetchError || !planData) return false;
+
+  const { error: sessionDeleteError } = await supabase
+    .from('study_sessions')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('plan_id', planData.id);
+
+  const { error: planDeleteError } = await supabase
+    .from('study_plans')
+    .delete()
+    .eq('user_id', user.id);
+
+  return !sessionDeleteError && !planDeleteError;
 };
 
-export const markSessionComplete = (sessionId: string): boolean => {
-  const plan = getWeeklyPlan();
-  if (!plan || !plan.sessions) return false;
-  
-  const updatedSessions = plan.sessions.map(session => 
-    session.id === sessionId ? { ...session, completed: true } : session
-  );
-  
-  plan.sessions = updatedSessions;
-  saveWeeklyPlan(plan);
-  
-  return true;
+export const markSessionComplete = async (sessionId: string): Promise<boolean> => {
+  const { user } = useAuth();
+  if (!user) return false;
+
+  const { error } = await supabase
+    .from('study_sessions')
+    .update({ completed: true })
+    .eq('id', sessionId)
+    .eq('user_id', user.id);
+
+  return !error;
 };
+
