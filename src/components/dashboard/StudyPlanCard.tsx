@@ -4,12 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 import WeeklyPlanView from "@/components/WeeklyPlanView";
+import { StudyTimeline } from "@/components/timeline/StudyTimeline";
+import { getWeeklyPlan } from "@/utils/studyPlanStorage";
 
 interface StudyPlanCardProps {
   onEditPlan: () => void;
 }
 
 export const StudyPlanCard = ({ onEditPlan }: StudyPlanCardProps) => {
+  const plan = getWeeklyPlan();
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -35,6 +39,7 @@ export const StudyPlanCard = ({ onEditPlan }: StudyPlanCardProps) => {
         </CardHeader>
         <CardContent>
           <WeeklyPlanView />
+          {plan && plan.sessions && <StudyTimeline sessions={plan.sessions} />}
         </CardContent>
       </Card>
     </motion.div>
