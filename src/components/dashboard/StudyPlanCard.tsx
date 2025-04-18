@@ -22,7 +22,7 @@ export const StudyPlanCard = ({ onEditPlan }: StudyPlanCardProps) => {
     queryFn: getWeeklyPlan,
     enabled: !!user,
     refetchOnWindowFocus: true,
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 0, // Always validate the data
   });
   
   if (isLoading) {

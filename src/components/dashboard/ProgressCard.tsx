@@ -3,19 +3,35 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { getWeeklyPlan } from "@/utils/studyPlanStorage";
+import { useAuth } from "@/hooks/useAuth";
+import { calculateCompletionRate } from "@/utils/studyPlanHelper";
 
-interface ProgressCardProps {
-  progressValue: number;
-}
-
-export const ProgressCard = ({ progressValue }: ProgressCardProps) => {
+export const ProgressCard = () => {
+  const { user } = useAuth();
+  
+  // Use React Query to fetch the study plan
+  const { data: plan } = useQuery({
+    queryKey: ['weeklyPlan', user?.id],
+    queryFn: getWeeklyPlan,
+    enabled: !!user,
+    refetchOnWindowFocus: true,
+  });
+  
+  // Calculate progress value dynamically based on current plan data
+  const progressValue = plan?.sessions
+    ? (plan.sessions.filter(session => session.completed).length / plan.sessions.length) * 100
+    : 0;
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.1 }}
+      className="h-full"
     >
-      <Card className="glass-card">
+      <Card className="glass-card h-full">
         <CardHeader>
           <CardTitle className="flex items-center">
             <CheckCircle className="mr-2 text-primary" />

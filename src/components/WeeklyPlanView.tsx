@@ -20,6 +20,7 @@ const WeeklyPlanView = () => {
     queryKey: ['weeklyPlan', user?.id],
     queryFn: getWeeklyPlan,
     enabled: !!user,
+    staleTime: 0, // Always validate the data
     refetchOnWindowFocus: true,
   });
   

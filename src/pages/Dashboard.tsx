@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import StudyPlanForm from "@/components/StudyPlanForm";
 import { hasExistingPlan } from "@/utils/studyPlanStorage";
-import { calculateCompletionRate } from "@/utils/studyPlanHelper";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { AIChatCard } from "@/components/dashboard/AIChatCard";
 import { ProgressCard } from "@/components/dashboard/ProgressCard";
@@ -16,7 +15,6 @@ import { useQueryClient } from "@tanstack/react-query";
 
 const Dashboard = () => {
   const [showPlanForm, setShowPlanForm] = useState(false);
-  const [progressValue, setProgressValue] = useState(0);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
@@ -30,23 +28,8 @@ const Dashboard = () => {
     checkExistingPlan();
   }, [user]);
   
-  useEffect(() => {
-    const updateProgress = async () => {
-      const completionRate = await calculateCompletionRate();
-      setProgressValue(completionRate);
-    };
-    
-    updateProgress();
-    
-    const intervalId = setInterval(updateProgress, 60000);
-    
-    return () => clearInterval(intervalId);
-  }, []);
-  
   const handlePlanComplete = async () => {
     setShowPlanForm(false);
-    const completionRate = await calculateCompletionRate();
-    setProgressValue(completionRate);
     // Refresh the study plan data
     queryClient.invalidateQueries({ queryKey: ['weeklyPlan'] });
     toast.success("Study plan updated successfully!");
@@ -57,8 +40,10 @@ const Dashboard = () => {
       <DashboardHeader />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <ProgressCard progressValue={progressValue} />
-        <div className="grid grid-cols-1 gap-4">
+        <div className="h-full">
+          <ProgressCard />
+        </div>
+        <div className="grid grid-cols-1 gap-4 h-full">
           <StreakTracker />
           <SmartReminders />
         </div>
