@@ -13,14 +13,19 @@ export const saveWeeklyPlan = async (plan: WeeklyStudyPlan): Promise<WeeklyStudy
   const userId = await getCurrentUserId();
   if (!userId) return null;
 
+  // Convert objects to JSON for storage
+  const subjectsJson = plan.subjects as any;
+  const dailyTimesJson = plan.dailyTimes as any;
+
+  // Using array for upsert as expected by Supabase
   const { data, error } = await supabase
     .from('study_plans')
-    .upsert({
+    .upsert([{
       user_id: userId,
-      subjects: plan.subjects,
-      daily_times: plan.dailyTimes,
+      subjects: subjectsJson,
+      daily_times: dailyTimesJson,
       last_generated: new Date().toISOString()
-    })
+    }])
     .select()
     .single();
 
@@ -80,8 +85,8 @@ export const getWeeklyPlan = async (): Promise<WeeklyStudyPlan | null> => {
   }
 
   return {
-    subjects: planData.subjects as unknown as StudySubject[],
-    dailyTimes: planData.daily_times as unknown as DailyStudyTime[],
+    subjects: planData.subjects as StudySubject[],
+    dailyTimes: planData.daily_times as DailyStudyTime[],
     sessions: sessionsData || [],
     lastGenerated: planData.last_generated
   };
