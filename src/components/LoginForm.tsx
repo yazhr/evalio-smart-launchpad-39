@@ -1,23 +1,39 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const LoginForm: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("login");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { signIn, signUp } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    const form = e.target as HTMLFormElement;
+    const email = (form.querySelector("#" + (activeTab === "login" ? "email" : "signup-email")) as HTMLInputElement).value;
+    const password = (form.querySelector("#" + (activeTab === "login" ? "password" : "signup-password")) as HTMLInputElement).value;
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      if (activeTab === "login") {
+        await signIn(email, password);
+        toast.success("Successfully logged in!");
+      } else {
+        await signUp(email, password);
+        toast.success("Successfully signed up! You can now log in.");
+        setActiveTab("login");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred");
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -99,17 +115,6 @@ const LoginForm: React.FC = () => {
           
           <TabsContent value="signup" className="space-y-6 mt-2">
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="signup-name" className="text-foreground/80 font-medium">Full Name</Label>
-                <Input 
-                  id="signup-name" 
-                  type="text" 
-                  placeholder="John Doe" 
-                  required 
-                  className="bg-white/5 border-white/10 h-12 text-base input-glow focus-visible:ring-evalio-purple focus-visible:ring-opacity-30 focus-visible:border-evalio-purple transition-all duration-300"
-                />
-              </div>
-              
               <div className="space-y-2">
                 <Label htmlFor="signup-email" className="text-foreground/80 font-medium">Email</Label>
                 <Input 
