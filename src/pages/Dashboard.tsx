@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,25 +34,21 @@ const Dashboard = () => {
   const [showPlanForm, setShowPlanForm] = useState(false);
   const [progressValue, setProgressValue] = useState(0);
   
-  // Check if it's the first time and no plan exists
   useEffect(() => {
     if (!hasExistingPlan()) {
       setShowPlanForm(true);
     }
   }, []);
   
-  // Calculate progress based on completed sessions
   useEffect(() => {
     const updateProgress = () => {
       const completionRate = calculateCompletionRate();
       setProgressValue(completionRate);
     };
     
-    // Update initially
     updateProgress();
     
-    // Set an interval to update progress regularly
-    const intervalId = setInterval(updateProgress, 60000); // Update every minute
+    const intervalId = setInterval(updateProgress, 60000);
     
     return () => clearInterval(intervalId);
   }, []);
@@ -70,43 +65,41 @@ const Dashboard = () => {
   
   const handlePlanComplete = () => {
     setShowPlanForm(false);
-    // Update progress after plan is created/updated
     const completionRate = calculateCompletionRate();
     setProgressValue(completionRate);
     toast.success("Study plan updated successfully!");
   };
   
   if (!user) {
-    return null; // Don't render anything if not logged in
+    return null;
   }
   
   return (
     <div className="min-h-screen bg-background p-6">
-      {/* Header with User Profile */}
       <header className="mb-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gradient bg-gradient-purple-blue">StudySmart Dashboard</h1>
-            <p className="text-muted-foreground">Your personalized learning experience</p>
+            <h1 className="text-2xl font-medium tracking-tight">StudySmart Dashboard</h1>
+            <p className="text-sm text-muted-foreground mt-1">Your personalized learning experience</p>
           </div>
           
           <Card className="glass-card w-full md:w-auto">
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
-                <Avatar className="h-12 w-12 border-2 border-primary/30">
-                  <AvatarImage src="" alt={user.email || "User"} />
-                  <AvatarFallback className="bg-primary/20 text-primary">
-                    {user.email?.charAt(0).toUpperCase() || "U"}
+                <Avatar className="h-10 w-10 border border-primary/20">
+                  <AvatarImage src="" alt={user?.email || "User"} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {user?.email?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium">{user.email}</p>
-                  <div className="flex gap-2 mt-1">
-                    <Button variant="outline" size="sm" className="h-8" onClick={() => toast.info("Profile editing coming soon!")}>
-                      <User className="mr-1 h-4 w-4" /> Edit Profile
+                  <p className="text-sm font-medium">{user?.email}</p>
+                  <div className="flex gap-2 mt-2">
+                    <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => toast.info("Profile editing coming soon!")}>
+                      <User className="mr-1 h-3 w-3" /> Profile
                     </Button>
-                    <Button variant="outline" size="sm" className="h-8" onClick={handleSignOut}>
-                      <LogOut className="mr-1 h-4 w-4" /> Log Out
+                    <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleSignOut}>
+                      <LogOut className="mr-1 h-3 w-3" /> Sign Out
                     </Button>
                   </div>
                 </div>
@@ -116,36 +109,33 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Main Dashboard Content */}
-      <div className="grid grid-cols-1 gap-6">
-        {/* Study Assistant Card - Prominent placement at the top */}
+      <div className="grid grid-cols-1 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Card className="glass-card border-2 border-primary/30 shadow-lg hover:shadow-primary/20 transition-all duration-300">
+          <Card className="glass-card border border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
-                <CardTitle className="flex items-center text-2xl">
-                  <Bot className="mr-2 text-primary h-6 w-6" />
-                  Talk to Your Study Assistant 🤖
+                <CardTitle className="text-xl font-medium flex items-center">
+                  <Bot className="mr-2 text-primary h-5 w-5" />
+                  AI Study Assistant
                 </CardTitle>
-                <CardDescription className="text-base">Get personalized study advice and plan recommendations</CardDescription>
+                <CardDescription className="text-sm mt-1">Get personalized study advice and plan recommendations</CardDescription>
               </div>
               <Link to="/chat">
-                <Button className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 px-6 py-5 text-lg shadow-lg">
-                  <MessageCircle className="mr-2 h-5 w-5" /> Chat Now
+                <Button className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 px-4 py-2 text-sm">
+                  <MessageCircle className="mr-2 h-4 w-4" /> Start Chat
                 </Button>
               </Link>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Your AI-powered study assistant can help with scheduling, learning strategies, and answering your subject questions.</p>
+              <p className="text-sm text-muted-foreground">Your AI-powered study assistant can help with scheduling, learning strategies, and answering your subject questions.</p>
             </CardContent>
           </Card>
         </motion.div>
         
-        {/* Progress Tracker */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -180,7 +170,6 @@ const Dashboard = () => {
           </Card>
         </motion.div>
 
-        {/* Weekly Plan */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -210,7 +199,6 @@ const Dashboard = () => {
         </motion.div>
       </div>
       
-      {/* First-time setup modal for the weekly study plan */}
       <Dialog open={showPlanForm} onOpenChange={setShowPlanForm}>
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto p-0">
           <StudyPlanForm onComplete={handlePlanComplete} />

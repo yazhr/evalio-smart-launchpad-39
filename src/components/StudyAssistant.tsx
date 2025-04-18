@@ -71,36 +71,36 @@ const StudyAssistant = () => {
 
   return (
     <div className="flex flex-col h-[400px]">
-      <div className="flex-1 overflow-y-auto pr-2 space-y-4 mb-4">
+      <div className="flex-1 overflow-y-auto pr-2 space-y-3 mb-4">
         {messages.map((message, index) => (
           <motion.div
             key={message.id}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
+            transition={{ duration: 0.2, delay: index * 0.05 }}
             className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div className={`
-              flex gap-3 max-w-[80%]
+              flex gap-2 max-w-[80%]
               ${message.sender === 'user' ? 'flex-row-reverse' : ''}
             `}>
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-6 w-6">
                 {message.sender === 'assistant' ? (
                   <>
-                    <AvatarImage src="/placeholder.svg" className="bg-primary/20 p-1" />
-                    <AvatarFallback className="bg-primary/20 text-primary">AI</AvatarFallback>
+                    <AvatarImage src="/placeholder.svg" className="bg-primary/10" />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs">AI</AvatarFallback>
                   </>
                 ) : (
                   <>
-                    <AvatarFallback className="bg-secondary/20 text-secondary">U</AvatarFallback>
+                    <AvatarFallback className="bg-secondary/10 text-secondary text-xs">U</AvatarFallback>
                   </>
                 )}
               </Avatar>
               <div className={`
-                rounded-2xl px-4 py-2 text-sm
+                rounded-lg px-3 py-2 text-sm
                 ${message.sender === 'assistant' 
-                  ? 'bg-primary/20 text-primary-foreground' 
-                  : 'bg-secondary/20 text-secondary-foreground'
+                  ? 'bg-primary/10 text-primary-foreground' 
+                  : 'bg-secondary/10 text-secondary-foreground'
                 }
               `}>
                 {message.content}
@@ -115,10 +115,10 @@ const StudyAssistant = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask for study tips, schedule help, or questions about your topics..."
-          className="bg-white/5 border-white/10 input-glow"
+          placeholder="Ask for study tips or questions about your topics..."
+          className="bg-white/5 border-white/10 text-sm"
         />
-        <Button onClick={handleSend} variant="outline" className="px-3">
+        <Button onClick={handleSend} variant="outline" size="icon" className="shrink-0">
           <Send className="h-4 w-4" />
         </Button>
       </div>
