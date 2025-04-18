@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { getWeeklyPlan } from "@/utils/studyPlanStorage";
 import { useAuth } from "@/hooks/useAuth";
-import { calculateCompletionRate } from "@/utils/studyPlanHelper";
 
 export const ProgressCard = () => {
   const { user } = useAuth();
@@ -24,6 +23,14 @@ export const ProgressCard = () => {
     ? (plan.sessions.filter(session => session.completed).length / plan.sessions.length) * 100
     : 0;
   
+  // Determine progress color based on completion rate
+  const getProgressColor = () => {
+    if (progressValue < 25) return "#ea384c";  // Red for low progress
+    if (progressValue < 50) return "#FEC6A1";  // Soft Orange for moderate progress
+    if (progressValue < 75) return "#33C3F0";  // Sky Blue for good progress
+    return "#9b87f5";  // Primary Purple for excellent progress
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -32,30 +39,32 @@ export const ProgressCard = () => {
       className="h-full"
     >
       <Card className="glass-card h-full">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <CheckCircle className="mr-2 text-primary" />
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center text-lg">
+            <CheckCircle className="mr-2 text-primary h-5 w-5" />
             Weekly Progress
           </CardTitle>
-          <CardDescription>Track your study plan completion for this week</CardDescription>
+          <CardDescription className="text-xs">Track your study plan completion</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between">
-              <span className="text-sm font-medium">Completion Rate</span>
-              <span className="text-sm font-medium">{Math.round(progressValue)}%</span>
-            </div>
-            <Progress value={progressValue} className="h-3" />
-            <p className="text-sm text-muted-foreground mt-2">
-              {progressValue === 0 
-                ? "You haven't completed any sessions yet. Let's get started!" 
-                : progressValue < 50 
-                  ? "You're making progress! Keep going to reach your goals." 
-                  : progressValue < 100 
-                    ? "Great progress! You're well on your way to completing your weekly plan." 
-                    : "Excellent! You've completed all your planned study sessions this week."}
-            </p>
+        <CardContent className="space-y-2 pt-2">
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-medium">Completion Rate</span>
+            <span className="text-xs font-medium">{Math.round(progressValue)}%</span>
           </div>
+          <Progress 
+            value={progressValue} 
+            className="h-2" 
+            indicatorClassName={`bg-[${getProgressColor()}]`}
+          />
+          <p className="text-xs text-muted-foreground">
+            {progressValue === 0 
+              ? "Start your study plan!" 
+              : progressValue < 50 
+                ? "Progress is key. Keep going!" 
+                : progressValue < 100 
+                  ? "Great progress!" 
+                  : "Plan completed successfully!"}
+          </p>
         </CardContent>
       </Card>
     </motion.div>
