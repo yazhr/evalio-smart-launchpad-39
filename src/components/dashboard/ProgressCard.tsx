@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Book, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { getWeeklyPlan } from "@/utils/studyPlanStorage";
@@ -48,6 +48,27 @@ export const ProgressCard = () => {
     },
   };
 
+  const floatingAnimation = {
+    y: [-5, 5],
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      repeatType: "reverse",
+      ease: "easeInOut"
+    }
+  };
+
+  const circleAnimation = {
+    scale: [0.97, 1.03],
+    opacity: [0.7, 0.9],
+    transition: {
+      duration: 3,
+      repeat: Infinity,
+      repeatType: "reverse",
+      ease: "easeInOut"
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -69,6 +90,7 @@ export const ProgressCard = () => {
             repeatType: "reverse",
           }}
         />
+        
         <CardHeader className="pb-2 relative">
           <motion.div
             variants={progressVariants}
@@ -86,12 +108,13 @@ export const ProgressCard = () => {
             </motion.div>
           </motion.div>
         </CardHeader>
+        
         <CardContent className="space-y-2 pt-2 relative">
           <motion.div
             variants={progressVariants}
             initial="hidden"
             animate="visible"
-            className="space-y-2"
+            className="space-y-4"
           >
             <motion.div variants={itemVariants} className="flex justify-between items-center">
               <span className="text-xs font-medium">Completion Rate</span>
@@ -104,17 +127,27 @@ export const ProgressCard = () => {
                 indicatorClassName={`bg-[${getProgressColor()}]`}
               />
             </motion.div>
-            <motion.div variants={itemVariants}>
-              <p className="text-xs text-muted-foreground">
-                {progressValue === 0 
-                  ? "Start your study plan!" 
-                  : progressValue < 50 
-                    ? "Progress is key. Keep going!" 
-                    : progressValue < 100 
-                      ? "Great progress!" 
-                      : "Plan completed successfully!"}
-              </p>
-            </motion.div>
+
+            <div className="flex justify-center items-center h-32 relative mt-4">
+              <motion.div
+                className="absolute w-32 h-32 rounded-full bg-primary/5"
+                animate={circleAnimation}
+              />
+              <motion.div className="relative z-10 flex flex-col items-center gap-2">
+                <motion.div animate={floatingAnimation}>
+                  <Book className="w-12 h-12 text-primary" />
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex items-center gap-2"
+                >
+                  <Clock className="w-4 h-4 text-primary/70" />
+                  <span className="text-sm text-muted-foreground">Study Time</span>
+                </motion.div>
+              </motion.div>
+            </div>
           </motion.div>
         </CardContent>
       </Card>
