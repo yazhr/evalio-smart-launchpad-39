@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,13 +14,6 @@ const LoginForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { signIn, signUp, user } = useAuth();
 
-  // If user is already logged in, redirect to dashboard
-  useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
-    }
-  }, [user, navigate]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -33,14 +25,15 @@ const LoginForm: React.FC = () => {
     try {
       if (activeTab === "login") {
         await signIn(email, password);
+        console.log("Login successful, waiting for redirect");
         toast.success("Successfully logged in!");
-        navigate("/dashboard");
       } else {
         await signUp(email, password);
         toast.success("Successfully signed up! You can now log in.");
         setActiveTab("login");
       }
     } catch (error: any) {
+      console.error("Auth error:", error);
       toast.error(error.message || "An error occurred");
     } finally {
       setIsLoading(false);

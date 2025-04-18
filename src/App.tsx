@@ -13,9 +13,19 @@ const queryClient = new QueryClient();
 
 // Protected route component that redirects to home if not authenticated
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  
+  // Show loading state if auth is still being checked
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
   
   if (!user) {
+    console.log("No user found, redirecting to home");
     return <Navigate to="/" replace />;
   }
   
@@ -24,9 +34,19 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Redirect to dashboard if already authenticated
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  
+  // Show loading state if auth is still being checked
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
   
   if (user) {
+    console.log("User found, redirecting to dashboard");
     return <Navigate to="/dashboard" replace />;
   }
   
