@@ -175,20 +175,34 @@ const StudyPlanForm: React.FC<StudyPlanFormProps> = ({ onComplete }) => {
       
       <CardContent className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="w-full grid grid-cols-2 mb-6 p-1 bg-muted/30 backdrop-blur-sm border border-border/20 rounded-lg">
             <TabsTrigger 
               value="subjects" 
-              className="flex items-center gap-2 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all"
+              className="flex items-center gap-2 py-3 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:backdrop-blur-xl transition-all duration-300 relative rounded-md"
             >
               <BookOpen className="h-4 w-4" />
               Subjects & Topics
+              {activeTab === "subjects" && (
+                <motion.div
+                  layoutId="tab-indicator"
+                  className="absolute inset-0 bg-primary/10 rounded-md -z-10"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
             </TabsTrigger>
             <TabsTrigger 
               value="schedule" 
-              className="flex items-center gap-2 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all"
+              className="flex items-center gap-2 py-3 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:backdrop-blur-xl transition-all duration-300 relative rounded-md"
             >
               <Calendar className="h-4 w-4" />
               Weekly Schedule
+              {activeTab === "schedule" && (
+                <motion.div
+                  layoutId="tab-indicator"
+                  className="absolute inset-0 bg-primary/10 rounded-md -z-10"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
             </TabsTrigger>
           </TabsList>
           
