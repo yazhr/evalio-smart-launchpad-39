@@ -6,13 +6,20 @@ import { motion } from "framer-motion";
 import WeeklyPlanView from "@/components/WeeklyPlanView";
 import { StudyTimeline } from "@/components/timeline/StudyTimeline";
 import { getWeeklyPlan } from "@/utils/studyPlanStorage";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface StudyPlanCardProps {
   onEditPlan: () => void;
 }
 
 export const StudyPlanCard = ({ onEditPlan }: StudyPlanCardProps) => {
-  const plan = getWeeklyPlan();
+  const queryClient = useQueryClient();
+
+  const { data: plan } = useQuery({
+    queryKey: ['weeklyPlan'],
+    queryFn: getWeeklyPlan,
+    refetchOnWindowFocus: true
+  });
   
   return (
     <motion.div
@@ -31,7 +38,11 @@ export const StudyPlanCard = ({ onEditPlan }: StudyPlanCardProps) => {
           </div>
           <Button 
             variant="outline" 
-            onClick={onEditPlan}
+            onClick={() => {
+              onEditPlan();
+              // Invalidate the query after plan edit dialog is opened
+              queryClient.invalidateQueries({ queryKey: ['weeklyPlan'] });
+            }}
             className="border-primary/30 hover:bg-primary/10"
           >
             Edit Plan
