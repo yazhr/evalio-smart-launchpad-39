@@ -7,43 +7,42 @@ import { BookOpen, Clock, CheckCircle, Calendar, AlertCircle } from "lucide-reac
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { StudySession, WeeklyStudyPlan } from "@/types/studyPlan";
-import { getWeeklyPlan, saveWeeklyPlan } from "@/utils/studyPlanStorage";
+import { getWeeklyPlan, markSessionComplete } from "@/utils/studyPlanStorage";
 import { checkAndResetWeeklyProgress } from "@/utils/studyPlanHelper";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 
 const WeeklyPlanView = () => {
-  const [studySessions, setStudySessions] = useState<StudySession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  
+  const { data: plan, isLoading: isPlanLoading } = useQuery({
+    queryKey: ['weeklyPlan', user?.id],
+    queryFn: getWeeklyPlan,
+    enabled: !!user,
+    refetchOnWindowFocus: true,
+    refetchInterval: 60000 // Refresh every minute
+  });
   
   useEffect(() => {
     // Check if week has changed and reset progress if needed
-    const wasReset = checkAndResetWeeklyProgress();
-    if (wasReset) {
-      toast.info("A new week has started! Your progress has been reset.");
-    }
+    const checkWeekProgress = async () => {
+      const wasReset = await checkAndResetWeeklyProgress();
+      if (wasReset) {
+        toast.info("A new week has started! Your progress has been reset.");
+      }
+    };
     
-    // Load study sessions
-    const plan = getWeeklyPlan();
-    if (plan && plan.sessions) {
-      setStudySessions(plan.sessions);
-    }
-    setIsLoading(false);
+    checkWeekProgress();
   }, []);
   
-  const markAsComplete = (id: string) => {
-    const updatedSessions = studySessions.map(session =>
-      session.id === id ? { ...session, completed: true } : session
-    );
-    
-    setStudySessions(updatedSessions);
-    
-    // Update storage
-    const plan = getWeeklyPlan();
-    if (plan) {
-      plan.sessions = updatedSessions;
-      saveWeeklyPlan(plan);
+  const handleMarkAsComplete = async (id: string) => {
+    const success = await markSessionComplete(id);
+    if (success) {
+      toast.success("Session marked as complete!");
+    } else {
+      toast.error("Failed to mark session as complete. Please try again.");
     }
-    
-    toast.success("Session marked as complete!");
   };
 
   // Order sessions by day of week
@@ -54,7 +53,7 @@ const WeeklyPlanView = () => {
     });
   };
 
-  if (isLoading) {
+  if (isPlanLoading || isLoading) {
     return (
       <div className="flex justify-center py-8">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -62,7 +61,7 @@ const WeeklyPlanView = () => {
     );
   }
 
-  if (studySessions.length === 0) {
+  if (!plan || !plan.sessions || plan.sessions.length === 0) {
     return (
       <motion.div 
         initial={{ opacity: 0 }}
@@ -91,7 +90,7 @@ const WeeklyPlanView = () => {
         </TableHeader>
         <TableBody>
           <AnimatePresence>
-            {orderByDay(studySessions).map((session) => (
+            {orderByDay(plan.sessions).map((session) => (
               <motion.tr
                 key={session.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -130,7 +129,7 @@ const WeeklyPlanView = () => {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => markAsComplete(session.id)}
+                      onClick={() => handleMarkAsComplete(session.id)}
                       className="h-8 hover:bg-primary/20 hover:text-primary"
                     >
                       <CheckCircle className="mr-1 h-4 w-4" />

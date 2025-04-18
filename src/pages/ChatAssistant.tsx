@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,10 +16,9 @@ interface Message {
   timestamp: Date;
 }
 
-// Example tailored responses for the AI assistant
-const getAssistantResponse = (userInput: string, userName: string) => {
+const getAssistantResponse = async (userInput: string, userName: string) => {
   // Get user's study plan to provide personalized responses
-  const plan = getWeeklyPlan();
+  const plan = await getWeeklyPlan();
   const subjects = plan?.subjects || [];
   const subjectNames = subjects.map(s => s.name.toLowerCase());
   
@@ -103,10 +101,10 @@ const ChatAssistant = () => {
     setIsTyping(true);
     
     // Simulate AI response (with typing effect)
-    setTimeout(() => {
+    setTimeout(async () => {
       setIsTyping(false);
       
-      const assistantResponse = getAssistantResponse(userMessage.content, userName);
+      const assistantResponse = await getAssistantResponse(userMessage.content, userName);
       const assistantMessage: Message = {
         id: messages.length + 2,
         content: assistantResponse,

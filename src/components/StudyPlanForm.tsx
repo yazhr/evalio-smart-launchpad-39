@@ -165,7 +165,6 @@ const StudyPlanForm: React.FC<StudyPlanFormProps> = ({ onComplete }) => {
     }
   };
   
-  // Helper function to get current week number
   const getCurrentWeekNumber = (): number => {
     const now = new Date();
     const start = new Date(now.getFullYear(), 0, 1);

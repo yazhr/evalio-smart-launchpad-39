@@ -1,12 +1,12 @@
 
-import { getWeeklyPlan } from "./studyPlanStorage";
+import { getWeeklyPlan, saveWeeklyPlan } from "./studyPlanStorage";
 
 /**
  * Calculates the current completion rate of study sessions
  * @returns A number between 0-100 representing completion percentage
  */
-export const calculateCompletionRate = (): number => {
-  const plan = getWeeklyPlan();
+export const calculateCompletionRate = async (): Promise<number> => {
+  const plan = await getWeeklyPlan();
   if (!plan || !plan.sessions || plan.sessions.length === 0) {
     return 0;
   }
@@ -33,8 +33,8 @@ export const getCurrentWeekNumber = (): number => {
  * Resets weekly progress if needed
  * Should be called when loading the dashboard
  */
-export const checkAndResetWeeklyProgress = (): boolean => {
-  const plan = getWeeklyPlan();
+export const checkAndResetWeeklyProgress = async (): Promise<boolean> => {
+  const plan = await getWeeklyPlan();
   if (!plan) return false;
   
   const storedWeek = localStorage.getItem('studysmart_current_week');
@@ -51,7 +51,7 @@ export const checkAndResetWeeklyProgress = (): boolean => {
       }));
       
       // Save the updated plan with reset completion status
-      localStorage.setItem('studysmart_weekly_plan', JSON.stringify(plan));
+      await saveWeeklyPlan(plan);
       return true; // Progress was reset
     }
   }

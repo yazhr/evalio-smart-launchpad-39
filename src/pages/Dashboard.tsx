@@ -27,8 +27,8 @@ const Dashboard = () => {
   }, [user]);
   
   useEffect(() => {
-    const updateProgress = () => {
-      const completionRate = calculateCompletionRate();
+    const updateProgress = async () => {
+      const completionRate = await calculateCompletionRate();
       setProgressValue(completionRate);
     };
     
@@ -39,9 +39,9 @@ const Dashboard = () => {
     return () => clearInterval(intervalId);
   }, []);
   
-  const handlePlanComplete = () => {
+  const handlePlanComplete = async () => {
     setShowPlanForm(false);
-    const completionRate = calculateCompletionRate();
+    const completionRate = await calculateCompletionRate();
     setProgressValue(completionRate);
     toast.success("Study plan updated successfully!");
   };
