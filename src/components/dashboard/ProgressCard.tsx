@@ -48,24 +48,36 @@ export const ProgressCard = () => {
     },
   };
 
-  const floatingAnimation = {
-    y: [-5, 5],
+  const iconAnimation = {
+    y: [-8, 0, -4, 0],
+    rotate: [-5, 0, 5, 0],
+    scale: [1, 1.05, 1, 1.02],
+    filter: ["brightness(1)", "brightness(1.2)", "brightness(1)", "brightness(1.1)"],
     transition: {
-      duration: 2,
+      duration: 4,
       repeat: Infinity,
-      repeatType: "reverse",
+      times: [0, 0.33, 0.66, 1],
       ease: "easeInOut"
     }
   };
 
   const circleAnimation = {
-    scale: [0.97, 1.03],
-    opacity: [0.7, 0.9],
+    scale: [1, 1.1, 1.05, 1],
+    opacity: [0.5, 0.7, 0.6, 0.5],
+    rotate: [0, 90, 180, 360],
     transition: {
-      duration: 3,
+      duration: 8,
       repeat: Infinity,
-      repeatType: "reverse",
-      ease: "easeInOut"
+      ease: [0.4, 0, 0.2, 1]
+    }
+  };
+
+  const orbitAnimation = {
+    rotate: [0, 360],
+    transition: {
+      duration: 10,
+      repeat: Infinity,
+      ease: "linear"
     }
   };
 
@@ -134,9 +146,26 @@ export const ProgressCard = () => {
                 animate={circleAnimation}
               />
               <motion.div className="relative z-10 flex flex-col items-center gap-2">
-                <motion.div animate={floatingAnimation}>
-                  <Book className="w-12 h-12 text-primary" />
+                {/* Orbital elements */}
+                <motion.div
+                  className="absolute inset-0 w-full h-full"
+                  animate={orbitAnimation}
+                >
+                  <div className="absolute w-2 h-2 rounded-full bg-primary/30 top-0 left-1/2 transform -translate-x-1/2" />
+                  <div className="absolute w-2 h-2 rounded-full bg-primary/30 bottom-0 left-1/2 transform -translate-x-1/2" />
+                  <div className="absolute w-2 h-2 rounded-full bg-primary/30 left-0 top-1/2 transform -translate-y-1/2" />
+                  <div className="absolute w-2 h-2 rounded-full bg-primary/30 right-0 top-1/2 transform -translate-y-1/2" />
                 </motion.div>
+                
+                {/* Main icon */}
+                <motion.div 
+                  animate={iconAnimation}
+                  className="relative"
+                >
+                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-md" />
+                  <Book className="w-12 h-12 text-primary relative z-10" />
+                </motion.div>
+                
                 <motion.div
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
