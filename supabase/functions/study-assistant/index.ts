@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,6 +17,9 @@ serve(async (req) => {
 
   try {
     const { message } = await req.json();
+    
+    console.log('Edge function called with message:', message);
+    console.log('Using API key:', GEMINI_API_KEY ? 'Key exists' : 'No key found');
 
     // Construct the system message to guide Gemini's responses
     const systemContext = `You are an intelligent study assistant helping students learn effectively.
@@ -63,12 +66,21 @@ serve(async (req) => {
     });
 
     const data = await response.json();
+    console.log('API Response:', JSON.stringify(data));
     
     if (data.error) {
-      throw new Error(data.error.message);
+      console.error('Gemini API error:', data.error);
+      throw new Error(data.error.message || 'Error from Gemini API');
+    }
+
+    // Check if the response has the expected structure
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
+      console.error('Unexpected API response structure:', data);
+      throw new Error('Invalid response structure from Gemini API');
     }
 
     const reply = data.candidates[0].content.parts[0].text;
+    console.log('Sending reply to client:', reply.substring(0, 100) + '...');
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

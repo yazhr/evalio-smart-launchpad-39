@@ -43,11 +43,19 @@ const StudyAssistant = () => {
     setIsLoading(true);
     
     try {
+      console.log('Sending to study-assistant function:', input);
+      
       const { data, error } = await supabase.functions.invoke('study-assistant', {
         body: { message: input }
       });
 
+      console.log('Function response:', data, 'Error:', error);
+
       if (error) throw error;
+      if (!data || !data.reply) {
+        console.error('Invalid response from function:', data);
+        throw new Error('Received an invalid response from the assistant');
+      }
 
       const assistantMessage: Message = {
         id: messages.length + 2,
@@ -110,6 +118,27 @@ const StudyAssistant = () => {
             </div>
           </motion.div>
         ))}
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-start"
+          >
+            <div className="flex gap-2">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src="/placeholder.svg" className="bg-primary/10" />
+                <AvatarFallback className="bg-primary/10 text-primary text-xs">AI</AvatarFallback>
+              </Avatar>
+              <div className="bg-primary/10 rounded-lg px-3 py-2">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-bounce"></div>
+                  <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
       
       <div className="flex gap-2">
