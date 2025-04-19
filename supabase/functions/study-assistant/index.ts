@@ -1,7 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+// Using the provided OpenAI API key
+const OPENAI_API_KEY = "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";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,10 +19,9 @@ serve(async (req) => {
     const { message } = await req.json();
     
     console.log('Study Assistant function called with message:', message);
-    console.log('OpenAI API key status:', OPENAI_API_KEY ? 'Available' : 'Missing');
-
-    if (!OPENAI_API_KEY) {
-      throw new Error('OpenAI API key is not configured');
+    
+    if (!message || typeof message !== 'string') {
+      throw new Error('Invalid request: message must be a string');
     }
 
     // Enhanced system message for better educational responses
@@ -32,6 +32,7 @@ serve(async (req) => {
     When appropriate, suggest specific study techniques like spaced repetition, active recall, or the Pomodoro method.
     If asked about a specific subject, provide well-structured explanations with examples.`;
 
+    console.log('Making request to OpenAI API...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -64,10 +65,11 @@ serve(async (req) => {
     }
 
     const reply = data.choices[0].message.content;
-    console.log('Sending reply to client (first 100 chars):', reply.substring(0, 100) + '...');
+    console.log('Received reply from OpenAI (first 100 chars):', reply.substring(0, 100) + '...');
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
     });
   } catch (error) {
     console.error('Error in study-assistant function:', error.message);

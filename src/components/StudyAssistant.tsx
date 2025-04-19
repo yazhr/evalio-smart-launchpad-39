@@ -59,7 +59,7 @@ const StudyAssistant = () => {
         body: { message: input }
       });
 
-      console.log('Function response data:', data);
+      console.log('Function response:', data);
 
       if (error) {
         console.error('Function error:', error);
@@ -79,8 +79,7 @@ const StudyAssistant = () => {
       };
       
       setMessages(prev => [...prev, assistantMessage]);
-      console.log('Assistant message added:', data.reply.substring(0, 50) + '...');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in handleSend:', error);
       toast.error(`Sorry, I couldn't process your request: ${error.message}`);
       setHasError(true);
