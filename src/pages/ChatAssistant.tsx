@@ -1,5 +1,5 @@
 
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -161,7 +161,7 @@ const ChatAssistant = () => {
       <div className="flex-1 overflow-y-auto p-4 md:p-6">
         <div className="container mx-auto max-w-3xl space-y-6">
           {apiQuotaExceeded && (
-            <Alert variant="warning" className="mb-4 bg-amber-50 border-amber-200">
+            <Alert variant="destructive" className="mb-4 bg-amber-50 border-amber-200">
               <AlertCircle className="h-4 w-4 text-amber-600" />
               <AlertDescription className="text-amber-800">
                 OpenAI API quota exceeded. You'll receive pre-written responses until this is resolved.
