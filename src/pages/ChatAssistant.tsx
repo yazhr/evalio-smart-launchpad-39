@@ -5,17 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowLeft, Send, ThumbsUp, ThumbsDown, HelpCircle } from "lucide-react";
+import { ArrowLeft, Send, ThumbsUp, ThumbsDown, HelpCircle, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface Message {
   id: string;
   content: string;
   sender: 'user' | 'assistant';
   timestamp: Date;
+  error?: boolean;
 }
 
 const ChatAssistant = () => {
@@ -23,6 +25,7 @@ const ChatAssistant = () => {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [apiQuotaExceeded, setApiQuotaExceeded] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
@@ -64,18 +67,38 @@ const ChatAssistant = () => {
         throw new Error('Invalid response from assistant');
       }
       
+      // Check if API quota was exceeded
+      if (data.error === "API_QUOTA_EXCEEDED") {
+        setApiQuotaExceeded(true);
+        toast.error("OpenAI API quota exceeded. Using fallback responses.", {
+          duration: 5000,
+        });
+      }
+      
       // Add assistant response
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
         content: data.reply,
         sender: 'assistant',
-        timestamp: new Date()
+        timestamp: new Date(),
+        error: data.error ? true : false
       };
       
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Error in handleSendMessage:', error);
       toast.error(`Failed to get response: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      
+      // Add error message from assistant
+      const errorMessage: Message = {
+        id: crypto.randomUUID(),
+        content: "I'm sorry, but I encountered an issue responding to your message. Please try again in a moment.",
+        sender: 'assistant',
+        timestamp: new Date(),
+        error: true
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -137,6 +160,15 @@ const ChatAssistant = () => {
       {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto p-4 md:p-6">
         <div className="container mx-auto max-w-3xl space-y-6">
+          {apiQuotaExceeded && (
+            <Alert variant="warning" className="mb-4 bg-amber-50 border-amber-200">
+              <AlertCircle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800">
+                OpenAI API quota exceeded. You'll receive pre-written responses until this is resolved.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center p-8 rounded-lg border border-white/10 bg-card/30 max-w-sm">
@@ -178,14 +210,16 @@ const ChatAssistant = () => {
                     <div className={`
                       rounded-xl px-4 py-3 text-base
                       ${message.sender === 'assistant' 
-                        ? 'bg-primary/20 text-primary-foreground' 
+                        ? message.error
+                          ? 'bg-amber-50/20 text-amber-700 border border-amber-200/30' 
+                          : 'bg-primary/20 text-primary-foreground' 
                         : 'bg-secondary/20 text-secondary-foreground'
                       }
                     `}>
                       {message.content}
                       
                       {/* Feedback buttons only for assistant messages */}
-                      {message.sender === 'assistant' && (
+                      {message.sender === 'assistant' && !message.error && (
                         <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                           <button 
                             className="p-1 hover:text-primary transition-colors" 
