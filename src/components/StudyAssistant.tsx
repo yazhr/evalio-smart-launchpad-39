@@ -20,7 +20,7 @@ const StudyAssistant = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      content: "Hi! I'm your AI study assistant powered by Google Gemini. How can I help with your studies today?",
+      content: "Hi! I'm your AI study assistant. How can I help with your studies today?",
       sender: 'assistant',
       timestamp: new Date()
     }
@@ -45,15 +45,20 @@ const StudyAssistant = () => {
     try {
       console.log('Sending to study-assistant function:', input);
       
+      // Call the edge function
       const { data, error } = await supabase.functions.invoke('study-assistant', {
         body: { message: input }
       });
 
       console.log('Function response:', data, 'Error:', error);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Function error:', error);
+        throw new Error(`Edge function error: ${error.message}`);
+      }
+      
       if (!data || !data.reply) {
-        console.error('Invalid response from function:', data);
+        console.error('Invalid response format from function:', data);
         throw new Error('Received an invalid response from the assistant');
       }
 
@@ -65,9 +70,20 @@ const StudyAssistant = () => {
       };
       
       setMessages(prev => [...prev, assistantMessage]);
+      console.log('Assistant message added:', data.reply.substring(0, 50) + '...');
     } catch (error) {
-      console.error('Error calling AI:', error);
-      toast.error("Sorry, I couldn't process your request. Please try again.");
+      console.error('Error in handleSend:', error);
+      toast.error(`Sorry, I couldn't process your request: ${error.message}`);
+      
+      // Add error message to the chat
+      const errorMessage: Message = {
+        id: messages.length + 2,
+        content: "I apologize, but I'm having trouble connecting to my knowledge base right now. Please try again in a moment.",
+        sender: 'assistant',
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
