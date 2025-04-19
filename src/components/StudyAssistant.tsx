@@ -1,11 +1,12 @@
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send } from "lucide-react";
+import { Send, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
@@ -26,6 +27,13 @@ const StudyAssistant = () => {
     }
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages update
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -41,6 +49,7 @@ const StudyAssistant = () => {
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
+    setHasError(false);
     
     try {
       console.log('Sending to study-assistant function:', input);
@@ -50,7 +59,7 @@ const StudyAssistant = () => {
         body: { message: input }
       });
 
-      console.log('Function response:', data, 'Error:', error);
+      console.log('Function response data:', data);
 
       if (error) {
         console.error('Function error:', error);
@@ -74,6 +83,7 @@ const StudyAssistant = () => {
     } catch (error) {
       console.error('Error in handleSend:', error);
       toast.error(`Sorry, I couldn't process your request: ${error.message}`);
+      setHasError(true);
       
       // Add error message to the chat
       const errorMessage: Message = {
@@ -98,6 +108,15 @@ const StudyAssistant = () => {
   return (
     <div className="flex flex-col h-[400px]">
       <div className="flex-1 overflow-y-auto pr-2 space-y-3 mb-4">
+        {hasError && (
+          <Alert variant="destructive" className="mb-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              There was an issue connecting to the AI service. Please try again later.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {messages.map((message, index) => (
           <motion.div
             key={message.id}
@@ -134,6 +153,7 @@ const StudyAssistant = () => {
             </div>
           </motion.div>
         ))}
+        
         {isLoading && (
           <motion.div
             initial={{ opacity: 0, y: 5 }}
@@ -155,6 +175,7 @@ const StudyAssistant = () => {
             </div>
           </motion.div>
         )}
+        <div ref={messagesEndRef} />
       </div>
       
       <div className="flex gap-2">
@@ -170,7 +191,7 @@ const StudyAssistant = () => {
           onClick={handleSend} 
           variant="outline" 
           size="icon" 
-          className="shrink-0"
+          className={`shrink-0 ${isLoading ? 'opacity-50' : ''}`}
           disabled={isLoading}
         >
           <Send className={`h-4 w-4 ${isLoading ? 'animate-pulse' : ''}`} />

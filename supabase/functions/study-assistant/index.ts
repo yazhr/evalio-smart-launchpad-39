@@ -17,14 +17,20 @@ serve(async (req) => {
   try {
     const { message } = await req.json();
     
-    console.log('Edge function called with message:', message);
-    console.log('Using OpenAI API key:', OPENAI_API_KEY ? 'Key exists' : 'No key found');
+    console.log('Study Assistant function called with message:', message);
+    console.log('OpenAI API key status:', OPENAI_API_KEY ? 'Available' : 'Missing');
 
-    // Construct the system message to guide the assistant's responses
+    if (!OPENAI_API_KEY) {
+      throw new Error('OpenAI API key is not configured');
+    }
+
+    // Enhanced system message for better educational responses
     const systemMessage = `You are an intelligent study assistant helping students learn effectively.
     Focus on providing clear, accurate academic guidance and study tips.
     Be encouraging and supportive while maintaining academic professionalism.
-    Base your responses on proven educational methods and accurate subject knowledge.`;
+    Base your responses on proven educational methods and accurate subject knowledge.
+    When appropriate, suggest specific study techniques like spaced repetition, active recall, or the Pomodoro method.
+    If asked about a specific subject, provide well-structured explanations with examples.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -44,11 +50,11 @@ serve(async (req) => {
     });
 
     const data = await response.json();
-    console.log('API Response structure:', JSON.stringify(data).substring(0, 200) + '...');
     
-    if (data.error) {
-      console.error('OpenAI API error:', data.error);
-      throw new Error(data.error.message || 'Error from OpenAI API');
+    if (!response.ok) {
+      console.error('OpenAI API error status:', response.status);
+      console.error('OpenAI API error response:', data);
+      throw new Error(`OpenAI API error: ${data.error?.message || response.statusText}`);
     }
 
     // Check if the response has the expected structure
@@ -58,13 +64,13 @@ serve(async (req) => {
     }
 
     const reply = data.choices[0].message.content;
-    console.log('Sending reply to client:', reply.substring(0, 100) + '...');
+    console.log('Sending reply to client (first 100 chars):', reply.substring(0, 100) + '...');
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error in study-assistant function:', error);
+    console.error('Error in study-assistant function:', error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
