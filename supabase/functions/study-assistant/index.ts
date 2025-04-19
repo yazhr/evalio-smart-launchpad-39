@@ -1,8 +1,7 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// Using the provided OpenAI API key
-const OPENAI_API_KEY = "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";
+// Removed hardcoded API key, now using environment variable
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
